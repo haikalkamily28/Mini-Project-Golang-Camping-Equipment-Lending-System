@@ -5,10 +5,14 @@ import (
     "mini/entity"
     "mini/repository"
     "golang.org/x/crypto/bcrypt"
+    "github.com/golang-jwt/jwt"
+    "time"
+	"log"
 )
 
 type UserService interface {
     Register(user *entity.User) error
+    Login(email, password string) (string, error)
 }
 
 type userService struct {
@@ -19,29 +23,56 @@ func NewUserService(repo repository.UserRepository) UserService {
     return &userService{userRepo: repo}
 }
 
-// Fungsi untuk meng-hash password
 func hashPassword(password string) (string, error) {
-    hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
     if err != nil {
+        log.Println("Error hashing password:", err)
         return "", err
     }
-    return string(hashedBytes), nil
+    return string(hashedPassword), nil
 }
 
 func (s *userService) Register(user *entity.User) error {
-    // Periksa apakah email sudah terdaftar
     existingUser, _ := s.userRepo.GetUserByEmail(user.Email)
     if existingUser != nil {
         return errors.New("email already registered")
     }
 
-    // Hash password
     hashedPassword, err := hashPassword(user.Password)
     if err != nil {
         return err
     }
     user.Password = hashedPassword
 
-    // Simpan user
     return s.userRepo.CreateUser(user)
 }
+
+// Fungsi untuk memeriksa password dengan bcrypt
+func checkPassword(hashedPassword, password string) error {
+    return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func (s *userService) Login(email, password string) (string, error) {
+    user, err := s.userRepo.GetUserByEmail(email)
+    if err != nil {
+        return "", errors.New("invalid email or password")
+    }
+
+    if err := checkPassword(user.Password, password); err != nil {
+        return "", errors.New("invalid email or password")
+    }
+
+    // Buat JWT token jika login berhasil
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "user_id": user.ID,
+        "exp":     time.Now().Add(time.Hour * 24).Unix(),
+    })
+
+    tokenString, err := token.SignedString([]byte("your_secret_key"))
+    if err != nil {
+        return "", err
+    }
+
+    return tokenString, nil
+}
+

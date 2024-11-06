@@ -9,4 +9,5 @@ import (
 func RegisterRoutes(e *echo.Echo, userService service.UserService) {
     userHandler := handler.UserHandler{UserService: userService}  
     e.POST("/register", userHandler.Register)
+	e.POST("/login", userHandler.Login)
 }

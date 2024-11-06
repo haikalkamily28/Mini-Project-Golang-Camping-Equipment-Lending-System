@@ -11,6 +11,11 @@ type UserHandler struct {
     UserService service.UserService 
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func NewUserHandler(e *echo.Echo, userService service.UserService) {
     handler := &UserHandler{UserService: userService}
     e.POST("/register", handler.Register)
@@ -31,4 +36,22 @@ func (h *UserHandler) Register(c echo.Context) error {
     }
 
     return c.JSON(http.StatusOK, map[string]string{"message": "Registration successful"})
+}
+
+func (h *UserHandler) Login(c echo.Context) error {
+    req := new(LoginRequest)
+    if err := c.Bind(req); err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+    }
+
+    if req.Email == "" || req.Password == "" {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
+    }
+
+    token, err := h.UserService.Login(req.Email, req.Password)
+    if err != nil {
+        return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+    }
+
+    return c.JSON(http.StatusOK, map[string]string{"token": token})
 }
