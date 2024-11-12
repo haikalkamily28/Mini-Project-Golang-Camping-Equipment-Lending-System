@@ -5,7 +5,7 @@ import (
     "mini/entity"
     "mini/repository"
     "golang.org/x/crypto/bcrypt"
-    "github.com/golang-jwt/jwt"
+    "github.com/golang-jwt/jwt/v5"
     "time"
 	"log"
 )
@@ -47,7 +47,6 @@ func (s *userService) Register(user *entity.User) error {
     return s.userRepo.CreateUser(user)
 }
 
-// Fungsi untuk memeriksa password dengan bcrypt
 func checkPassword(hashedPassword, password string) error {
     return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
@@ -62,13 +61,12 @@ func (s *userService) Login(email, password string) (string, error) {
         return "", errors.New("invalid email or password")
     }
 
-    // Buat JWT token jika login berhasil
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
         "user_id": user.ID,
         "exp":     time.Now().Add(time.Hour * 24).Unix(),
     })
 
-    tokenString, err := token.SignedString([]byte("your_secret_key"))
+    tokenString, err := token.SignedString([]byte("aji"))
     if err != nil {
         return "", err
     }

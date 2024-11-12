@@ -1,8 +1,8 @@
 package service
 
 import (
-	"mini/entity"
-	"mini/repository"
+    "mini/entity"
+    "mini/repository"
 )
 
 type LoanService struct {
@@ -20,3 +20,16 @@ func (s *LoanService) GetAllLoans() ([]entity.Loan, error) {
 func (s *LoanService) GetLoanByID(id uint) (entity.Loan, error) {
     return s.loanRepo.GetLoanByID(id)
 }
+
+func (s *LoanService) CreateLoan(loan *entity.Loan) error {
+    return s.loanRepo.CreateLoan(loan)
+}
+
+func (s *LoanService) UpdateLoan(loan *entity.Loan) error {
+    return s.loanRepo.UpdateLoan(loan)
+}
+
+func (s *LoanService) DeleteLoan(id uint) error {
+    return s.loanRepo.DeleteLoan(id)
+}
+

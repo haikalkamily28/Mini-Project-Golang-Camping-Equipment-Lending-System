@@ -27,7 +27,7 @@ func (h *UserHandler) Register(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
     }
 
-    if user.Username == "" || user.Email == "" || user.Password == "" {
+    if user.Email == "" || user.Password == "" {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required"})
     }
 
@@ -44,14 +44,10 @@ func (h *UserHandler) Login(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
     }
 
-    if req.Email == "" || req.Password == "" {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
-    }
-
     token, err := h.UserService.Login(req.Email, req.Password)
     if err != nil {
         return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
     }
-
     return c.JSON(http.StatusOK, map[string]string{"token": token})
 }
+
