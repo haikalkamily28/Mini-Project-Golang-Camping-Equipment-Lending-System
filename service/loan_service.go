@@ -13,6 +13,10 @@ func NewLoanService(loanRepo repository.LoanRepository) *LoanService {
     return &LoanService{loanRepo: loanRepo}
 }
 
+func (s *LoanService) GetLoanRepository() repository.LoanRepository {
+    return s.loanRepo
+}
+
 func (s *LoanService) GetAllLoans() ([]entity.Loan, error) {
     return s.loanRepo.GetAllLoans()
 }

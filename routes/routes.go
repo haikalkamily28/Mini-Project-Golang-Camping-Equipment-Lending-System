@@ -7,7 +7,7 @@ import (
     "github.com/labstack/echo-jwt/v4"
 )
 
-func Routes(e *echo.Echo, userService service.UserService, loanService *service.LoanService) {
+func Routes(e *echo.Echo, userService service.UserService, loanService *service.LoanService, itemService *service.ItemService) {
     userHandler := handler.UserHandler{UserService: userService}
     e.POST("/register", userHandler.Register)
     e.POST("/login", userHandler.Login)
@@ -21,5 +21,13 @@ func Routes(e *echo.Echo, userService service.UserService, loanService *service.
     loanGroup.GET("/:id", loanHandler.GetLoanByID)
     loanGroup.POST("", loanHandler.CreateLoan)
     loanGroup.PUT("/:id", loanHandler.UpdateLoan)
-    loanGroup.DELETE("/:id", loanHandler.DeleteLoan) 
+    loanGroup.DELETE("/:id", loanHandler.DeleteLoan)
+
+    itemGroup := e.Group("/items")
+    itemGroup.Use(echojwt.WithConfig(echojwt.Config{
+        SigningKey: []byte("aji"),
+    }))
+    itemHandler := handler.NewItemHandler(itemService)
+    itemGroup.GET("", itemHandler.GetAllItems)
+    itemGroup.POST("", itemHandler.CreateItem)
 }

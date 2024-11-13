@@ -20,7 +20,11 @@ func main() {
     loanRepo := repository.NewLoanRepository(config.DB)
     loanService := service.NewLoanService(loanRepo)
 
-    routes.Routes(e, userService, loanService)
+    itemRepo := repository.NewItemRepository(config.DB)
+    itemService := service.NewItemService(itemRepo)
+
+    routes.Routes(e, userService, loanService, itemService)
 
     log.Fatal(e.Start(":8080"))
 }
+

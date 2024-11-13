@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"github.com/labstack/echo/v4"
     "github.com/golang-jwt/jwt/v5"
-    "fmt"
 )
 
 type LoanHandler struct {
@@ -22,10 +21,9 @@ func NewLoanHandler(loanService *service.LoanService) *LoanHandler {
 func (h *LoanHandler) GetAllLoans(c echo.Context) error {
     loans, err := h.loanService.GetAllLoans()
     if err != nil {
-        fmt.Println("Error fetching loans:", err)
         return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error fetching loans"})
     }
-    return c.JSON(http.StatusOK, loans)
+    return c.JSON(http.StatusOK, loans) // Return all loans with preloaded User and Item
 }
 
 func (h *LoanHandler) GetLoanByID(c echo.Context) error {
@@ -38,30 +36,34 @@ func (h *LoanHandler) GetLoanByID(c echo.Context) error {
     if err != nil {
         return c.JSON(http.StatusNotFound, map[string]string{"message": "Loan not found"})
     }
-
-    return c.JSON(http.StatusOK, loan)
+    return c.JSON(http.StatusOK, loan) // Return loan with preloaded User and Item
 }
 
 func (h *LoanHandler) CreateLoan(c echo.Context) error {
-    loan := new(entity.Loan)
-    if err := c.Bind(loan); err != nil {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+    var loan entity.Loan
+    if err := c.Bind(&loan); err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
     }
 
+    // Set the user ID from JWT claims
     user := c.Get("user").(*jwt.Token)
     claims := user.Claims.(jwt.MapClaims)
     userID := uint(claims["user_id"].(float64))
     loan.UserID = userID
 
-    if loan.ItemName == "" || loan.BorrowDate == "" || loan.ReturnDate == "" {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required"})
+    // Create the loan using the LoanService
+    err := h.loanService.CreateLoan(&loan)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
     }
 
-    if err := h.loanService.CreateLoan(loan); err != nil {
-        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create loan"})
+    // After creation, fetch the loan with preloaded User and Item
+    loan, err = h.loanService.GetLoanByID(loan.ID)  // You should call GetLoanByID in LoanService
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error loading loan with User and Item"})
     }
 
-    return c.JSON(http.StatusCreated, loan)
+    return c.JSON(http.StatusCreated, loan) // Return the loan with preloaded User and Item
 }
 
 func (h *LoanHandler) UpdateLoan(c echo.Context) error {
@@ -87,7 +89,7 @@ func (h *LoanHandler) UpdateLoan(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
     }
 
-    if loan.ItemName == "" || loan.BorrowDate == "" || loan.ReturnDate == "" {
+    if loan.BorrowDate == "" || loan.ReturnDate == "" {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required"})
     }
 
