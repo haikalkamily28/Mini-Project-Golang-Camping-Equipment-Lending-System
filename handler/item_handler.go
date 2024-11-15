@@ -29,7 +29,7 @@ func (h *ItemHandler) CreateItem(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
     }
 
-    if item.Name == "" || item.Description == "" || item.Price <= 0 {
+    if item.Name == "" || item.Price <= 0 {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required and must be valid"})
     }
 

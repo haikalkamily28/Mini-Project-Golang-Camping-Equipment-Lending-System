@@ -1,13 +1,14 @@
 package service
 
 import (
-    "errors"
-    "mini/entity"
-    "mini/repository"
-    "golang.org/x/crypto/bcrypt"
-    "github.com/golang-jwt/jwt/v5"
-    "time"
+	"errors"
 	"log"
+	"mini/entity"
+	repository "mini/repository/auth"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {

@@ -1,8 +1,8 @@
 package service
 
 import (
-    "mini/entity"
-    "mini/repository"
+	"mini/entity"
+	repository "mini/repository/loan"
 )
 
 type LoanService struct {

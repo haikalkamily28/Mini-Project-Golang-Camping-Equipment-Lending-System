@@ -6,11 +6,6 @@ import (
     "gorm.io/gorm"
 )
 
-type UserRepository interface {
-    CreateUser(user *entity.User) error
-    GetUserByEmail(email string) (*entity.User, error)
-}
-
 type userRepository struct {
     db *gorm.DB
 }

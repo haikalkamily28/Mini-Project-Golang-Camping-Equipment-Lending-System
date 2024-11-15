@@ -5,11 +5,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type ItemRepository interface {
-    GetAllItems() ([]entity.Item, error)
-    CreateItem(item *entity.Item) error
-}
-
 type itemRepository struct {
     db *gorm.DB
 }

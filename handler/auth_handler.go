@@ -1,19 +1,16 @@
 package handler
 
 import (
-    "mini/entity"
-    "mini/service"
-    "net/http"
-    "github.com/labstack/echo/v4"
+	"mini/entity"
+	handler "mini/handler/request"
+	"mini/service"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
     UserService service.UserService 
-}
-
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
 
 func NewUserHandler(e *echo.Echo, userService service.UserService) {
@@ -39,7 +36,7 @@ func (h *UserHandler) Register(c echo.Context) error {
 }
 
 func (h *UserHandler) Login(c echo.Context) error {
-    req := new(LoginRequest)
+    req := new(handler.LoginRequest)
     if err := c.Bind(req); err != nil {
         return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
     }

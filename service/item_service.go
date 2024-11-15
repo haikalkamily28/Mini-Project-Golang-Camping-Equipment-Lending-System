@@ -1,8 +1,10 @@
 package service
 
 import (
+	"errors"
 	"mini/entity"
-	"mini/repository"
+	repository "mini/repository/item"
+	"mini/utils"
 )
 
 type ItemService struct {
@@ -18,5 +20,15 @@ func (s *ItemService) GetAllItems() ([]entity.Item, error) {
 }
 
 func (s *ItemService) CreateItem(item *entity.Item) error {
-    return s.itemRepo.CreateItem(item)
+	// Generate the description for the item using the Gemini API
+	description, err := utils.CallGeminiAPI(item.Name)
+	if err != nil {
+		return errors.New("failed to generate description")
+	}
+
+	// Set the generated description to the item
+	item.Description = description
+
+	// Create the item in the repository
+	return s.itemRepo.CreateItem(item)
 }
