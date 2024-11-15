@@ -7,8 +7,9 @@ import (
     authRepository "mini/repository/auth"
     itemRepository "mini/repository/item"
 	"mini/routes"
-	"mini/service"
-
+    authService "mini/service/auth"
+	itemService "mini/service/item"
+	loanService "mini/service/loan"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,13 +19,13 @@ func main() {
     e := echo.New()
 
     userRepo := authRepository.NewUserRepository(config.DB)
-    userService := service.NewUserService(userRepo)
+    userService := authService.NewUserService(userRepo)
 
     loanRepo := loanRepository.NewLoanRepository(config.DB)
-    loanService := service.NewLoanService(loanRepo)
+    loanService := loanService.NewLoanService(loanRepo)
 
     itemRepo := itemRepository.NewItemRepository(config.DB)
-    itemService := service.NewItemService(itemRepo)
+    itemService := itemService.NewItemService(itemRepo)
 
     routes.Routes(e, userService, loanService, itemService)
 

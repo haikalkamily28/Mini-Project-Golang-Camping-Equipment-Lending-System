@@ -1,17 +1,18 @@
 package handler
 
 import (
-    "mini/entity"
-    "mini/service"
-    "net/http"
-    "github.com/labstack/echo/v4"
+	"mini/entity"
+	itemService "mini/service/item"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 type ItemHandler struct {
-    itemService *service.ItemService
+    itemService *itemService.ItemService
 }
 
-func NewItemHandler(itemService *service.ItemService) *ItemHandler {
+func NewItemHandler(itemService *itemService.ItemService) *ItemHandler {
     return &ItemHandler{itemService: itemService}
 }
 

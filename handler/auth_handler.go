@@ -3,17 +3,17 @@ package handler
 import (
 	"mini/entity"
 	handler "mini/handler/request"
-	"mini/service"
+	authService "mini/service/auth"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-    UserService service.UserService 
+    UserService authService.UserService 
 }
 
-func NewUserHandler(e *echo.Echo, userService service.UserService) {
+func NewUserHandler(e *echo.Echo, userService authService.UserService) {
     handler := &UserHandler{UserService: userService}
     e.POST("/register", handler.Register)
 }

@@ -1,13 +1,15 @@
 package routes
 
 import (
-    "mini/handler"
-    "mini/service"
-    "github.com/labstack/echo/v4"
-    "github.com/labstack/echo-jwt/v4"
+	"mini/handler"
+	authService "mini/service/auth"
+	itemService "mini/service/item"
+	loanService "mini/service/loan"
+	"github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
 )
 
-func Routes(e *echo.Echo, userService service.UserService, loanService *service.LoanService, itemService *service.ItemService) {
+func Routes(e *echo.Echo, userService authService.UserService, loanService *loanService.LoanService, itemService *itemService.ItemService) {
     userHandler := handler.UserHandler{UserService: userService}
     e.POST("/register", userHandler.Register)
     e.POST("/login", userHandler.Login)

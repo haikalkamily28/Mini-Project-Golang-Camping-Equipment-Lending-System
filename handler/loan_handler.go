@@ -2,18 +2,18 @@ package handler
 
 import (
 	"mini/entity"
-	"mini/service"
+	loanService "mini/service/loan"
 	"net/http"
-	"strconv"
+	"strconv"   
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-    "github.com/golang-jwt/jwt/v5"
 )
 
 type LoanHandler struct {
-    loanService *service.LoanService
+    loanService *loanService.LoanService
 }
 
-func NewLoanHandler(loanService *service.LoanService) *LoanHandler {
+func NewLoanHandler(loanService *loanService.LoanService) *LoanHandler {
     return &LoanHandler{loanService: loanService}
 }
 
