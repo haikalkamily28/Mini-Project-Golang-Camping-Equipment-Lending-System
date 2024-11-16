@@ -125,6 +125,3 @@ func (h *LoanHandler) DeleteLoan(c echo.Context) error {
 
     return c.JSON(http.StatusOK, map[string]string{"message": "Loan deleted successfully"})
 }
-
-
-
