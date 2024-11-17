@@ -42,16 +42,33 @@ func (r *loanRepository) GetLoanByID(id uint) (entity.Loan, error) {
 }
 
 func (r *loanRepository) CreateLoan(loan *entity.Loan) error {
-	var item entity.Item
-	if err := r.db.First(&item, loan.ItemID).Error; err != nil {
-		return errors.New("item not found")
-	}
-	var user entity.User
-	if err := r.db.First(&user, loan.UserID).Error; err != nil {
-		return errors.New("user not found")
-	}
-	return r.db.Create(loan).Error
+    // Membuat context dengan timeout
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    // Validasi apakah ItemID dan UserID valid
+    var item entity.Item
+    if err := r.db.WithContext(ctx).First(&item, loan.ItemID).Error; err != nil {
+        log.Printf("Item with ID %d not found: %v", loan.ItemID, err)
+        return errors.New("item not found")
+    }
+
+    var user entity.User
+    if err := r.db.WithContext(ctx).First(&user, loan.UserID).Error; err != nil {
+        log.Printf("User with ID %d not found: %v", loan.UserID, err)
+        return errors.New("user not found")
+    }
+
+    // Menyimpan loan ke database
+    if err := r.db.WithContext(ctx).Create(loan).Error; err != nil {
+        log.Printf("Failed to create loan: %v", err)
+        return err
+    }
+
+    log.Printf("Loan created successfully with ID: %d", loan.ID)
+    return nil
 }
+
 
 func (r *loanRepository) UpdateLoan(loan *entity.Loan) error {
 	var item entity.Item
