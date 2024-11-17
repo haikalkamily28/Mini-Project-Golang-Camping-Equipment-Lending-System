@@ -5,8 +5,7 @@ import (
 	"mini/entity"
 	loanService "mini/service/loan"
 	"net/http"
-	"strconv"   
-	"github.com/golang-jwt/jwt/v5"
+	"strconv"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,124 +18,137 @@ func NewLoanHandler(loanService *loanService.LoanService) *LoanHandler {
 }
 
 func (h *LoanHandler) GetAllLoans(c echo.Context) error {
-    loans, err := h.loanService.GetAllLoans()
-    if err != nil {
-        log.Printf("Error fetching loans: %v", err)
-        return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error fetching loans"})
-    }
-    return c.JSON(http.StatusOK, loans) // Return all loans with preloaded User and Item
+	loans, err := h.loanService.GetAllLoans()
+	if err != nil {
+		log.Printf("Error fetching loans: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error fetching loans"})
+	}
+
+	// Convert loans to LoanResponse
+	var loanResponses []entity.LoanResponse
+	for _, loan := range loans {
+		loanResponse := entity.LoanResponse{
+			ID:         loan.ID,
+			BorrowDate: loan.BorrowDate,
+			ReturnDate: loan.ReturnDate,
+			Status:     loan.Status,
+			User: entity.UserResponse{
+				ID:    loan.User.ID,
+				Email: loan.User.Email,
+			},
+			Item: loan.Item,
+		}
+		loanResponses = append(loanResponses, loanResponse)
+	}
+
+	return c.JSON(http.StatusOK, loanResponses)
 }
 
 func (h *LoanHandler) GetLoanByID(c echo.Context) error {
-    id, err := strconv.Atoi(c.Param("id"))
-    if err != nil {
-        log.Printf("Invalid loan ID: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan ID"})
-    }
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Invalid loan ID: %v", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan ID"})
+	}
 
-    loan, err := h.loanService.GetLoanByID(uint(id))
-    if err != nil {
-        log.Printf("Loan not found for ID %d: %v", id, err)
-        return c.JSON(http.StatusNotFound, map[string]string{"message": "Loan not found"})
-    }
-    return c.JSON(http.StatusOK, loan) // Return loan with preloaded User and Item
+	loan, err := h.loanService.GetLoanByID(uint(id))
+	if err != nil {
+		log.Printf("Loan not found for ID %d: %v", id, err)
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "Loan not found"})
+	}
+
+	// Create response struct without password field
+	loanResponse := entity.LoanResponse{
+		ID:         loan.ID,
+		BorrowDate: loan.BorrowDate,
+		ReturnDate: loan.ReturnDate,
+		Status:     loan.Status,
+		User: entity.UserResponse{
+			ID:    loan.User.ID,
+			Email: loan.User.Email,
+		},
+		Item: loan.Item,
+	}
+
+	return c.JSON(http.StatusOK, loanResponse)
 }
 
 func (h *LoanHandler) CreateLoan(c echo.Context) error {
-    var loan entity.Loan
-    if err := c.Bind(&loan); err != nil {
-        log.Printf("Error binding loan data: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
-    }
+	var loan entity.Loan
+	if err := c.Bind(&loan); err != nil {
+		log.Printf("Failed to bind loan data: %v", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan data"})
+	}
 
-    // Set the user ID from JWT claims
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(jwt.MapClaims)
-    userID := uint(claims["user_id"].(float64))
-    loan.UserID = userID
+	createdLoan, err := h.loanService.CreateLoan(&loan)
+	if err != nil {
+		log.Printf("Failed to create loan: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create loan"})
+	}
 
-    // Create the loan using the LoanService
-    err := h.loanService.CreateLoan(&loan)
-    if err != nil {
-        log.Printf("Error creating loan: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
-    }
+	// Create response struct without password field
+	loanResponse := entity.LoanResponse{
+		ID:         createdLoan.ID,
+		BorrowDate: createdLoan.BorrowDate,
+		ReturnDate: createdLoan.ReturnDate,
+		Status:     createdLoan.Status,
+		User: entity.UserResponse{
+			ID:    createdLoan.User.ID,
+			Email: createdLoan.User.Email,
+		},
+		Item: createdLoan.Item,
+	}
 
-    // After creation, fetch the loan with preloaded User and Item
-    loan, err = h.loanService.GetLoanByID(loan.ID) // You should call GetLoanByID in LoanService
-    if err != nil {
-        log.Printf("Error loading loan with User and Item: %v", err)
-        return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error loading loan with User and Item"})
-    }
-
-    return c.JSON(http.StatusCreated, loan) // Return the loan with preloaded User and Item
+	return c.JSON(http.StatusOK, loanResponse)
 }
 
 func (h *LoanHandler) UpdateLoan(c echo.Context) error {
     id, err := strconv.Atoi(c.Param("id"))
     if err != nil {
-        log.Printf("Invalid loan ID: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid loan ID"})
+        return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan ID"})
     }
 
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(jwt.MapClaims)
-    userID := uint(claims["user_id"].(float64))
-
-    loan, err := h.loanService.GetLoanByID(uint(id))
-    if err != nil {
-        log.Printf("Loan not found for ID %d: %v", id, err)
-        return c.JSON(http.StatusNotFound, map[string]string{"error": "Loan not found"})
-    }
-
-    if loan.UserID != userID {
-        log.Printf("User %d does not have permission to update loan %d", userID, id)
-        return c.JSON(http.StatusForbidden, map[string]string{"error": "You do not have permission to update this loan"})
-    }
-
+    var loan entity.Loan
     if err := c.Bind(&loan); err != nil {
-        log.Printf("Error binding loan data: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+        return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan data"})
     }
 
-    if loan.BorrowDate == "" || loan.ReturnDate == "" {
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required"})
+    // Call service to update loan
+    updatedLoan, err := h.loanService.UpdateLoan(uint(id), &loan)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
     }
 
-    if err := h.loanService.UpdateLoan(&loan); err != nil {
-        log.Printf("Error updating loan: %v", err)
-        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update loan"})
+    // Create response struct without password field
+    loanResponse := entity.LoanResponse{
+        ID:         updatedLoan.ID,
+        BorrowDate: updatedLoan.BorrowDate,
+        ReturnDate: updatedLoan.ReturnDate,
+        Status:     updatedLoan.Status,
+        User: entity.UserResponse{
+            ID:    updatedLoan.User.ID,
+            Email: updatedLoan.User.Email,
+        },
+        Item: updatedLoan.Item,
     }
 
-    return c.JSON(http.StatusOK, loan)
+    return c.JSON(http.StatusOK, loanResponse)
 }
+
 
 func (h *LoanHandler) DeleteLoan(c echo.Context) error {
-    id, err := strconv.Atoi(c.Param("id"))
-    if err != nil {
-        log.Printf("Invalid loan ID: %v", err)
-        return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid loan ID"})
-    }
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Invalid loan ID: %v", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid loan ID"})
+	}
 
-    user := c.Get("user").(*jwt.Token)
-    claims := user.Claims.(jwt.MapClaims)
-    userID := uint(claims["user_id"].(float64))
+	err = h.loanService.DeleteLoan(uint(id))
+	if err != nil {
+		log.Printf("Error deleting loan: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error deleting loan"})
+	}
 
-    loan, err := h.loanService.GetLoanByID(uint(id))
-    if err != nil {
-        log.Printf("Loan not found for ID %d: %v", id, err)
-        return c.JSON(http.StatusNotFound, map[string]string{"error": "Loan not found"})
-    }
-
-    if loan.UserID != userID {
-        log.Printf("User %d does not have permission to delete loan %d", userID, id)
-        return c.JSON(http.StatusForbidden, map[string]string{"error": "You do not have permission to delete this loan"})
-    }
-
-    if err := h.loanService.DeleteLoan(uint(id)); err != nil {
-        log.Printf("Error deleting loan: %v", err)
-        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete loan"})
-    }
-
-    return c.JSON(http.StatusOK, map[string]string{"message": "Loan deleted successfully"})
+	return c.NoContent(http.StatusNoContent)
 }
+
