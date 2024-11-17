@@ -46,7 +46,7 @@ jobs:
         # needs: build-and-push-docker
         runs-on: ubuntu-latest
         env:
-            IMAGE_URI: haikalkamily28/mini-project:1.0.1
+            IMAGE_URI: haikalkamily28/mini-project-golang:1.0.1
             EC2_HOST: ${{secrets.EC2_HOST}}
             EC2_USER: ${{secrets.EC2_USER}}
 
