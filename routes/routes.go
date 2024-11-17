@@ -40,5 +40,5 @@ func Routes(e *echo.Echo, userService authService.UserService, loanService *loan
 	itemGroup.GET("", itemHandler.GetAllItems)
 	itemGroup.POST("", itemHandler.CreateItem)
 	itemGroup.PUT("/:id", itemHandler.UpdateItem)
-itemGroup.DELETE("/:id", itemHandler.DeleteItem)
+	itemGroup.DELETE("/:id", itemHandler.DeleteItem)
 }

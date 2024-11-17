@@ -149,6 +149,6 @@ func (h *LoanHandler) DeleteLoan(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error deleting loan"})
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return c.JSON(http.StatusOK, map[string]string{"message": "Item deleted successfully"})
 }
 
