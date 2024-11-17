@@ -29,6 +29,6 @@ func main() {
 
     routes.Routes(e, userService, loanService, itemService)
 
-    log.Fatal(e.Start(":8001"))
+    log.Fatal(e.Start(":8000"))
 }
 
