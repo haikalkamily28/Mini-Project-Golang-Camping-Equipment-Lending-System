@@ -7,29 +7,40 @@ import (
 	loanService "mini/service/loan"
 	"github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"log"
+	"os"
 )
 
 func Routes(e *echo.Echo, userService authService.UserService, loanService *loanService.LoanService, itemService *itemService.ItemService) {
-    userHandler := handler.UserHandler{UserService: userService}
-    e.POST("/register", userHandler.Register)
-    e.POST("/login", userHandler.Login)
+	// Setting JWT secret key from environment variable for security reasons
+	jwtKey := os.Getenv("JWT_SECRET_KEY")
+	if jwtKey == "" {
+		log.Fatal("JWT_SECRET_KEY not set in environment variables")
+	}
 
-    loanGroup := e.Group("/loans")
-    loanGroup.Use(echojwt.WithConfig(echojwt.Config{
-        SigningKey: []byte("aji"),
-    }))
-    loanHandler := handler.NewLoanHandler(loanService)
-    loanGroup.GET("", loanHandler.GetAllLoans)
-    loanGroup.GET("/:id", loanHandler.GetLoanByID)
-    loanGroup.POST("", loanHandler.CreateLoan)
-    loanGroup.PUT("/:id", loanHandler.UpdateLoan)
-    loanGroup.DELETE("/:id", loanHandler.DeleteLoan)
+	// User routes
+	userHandler := handler.UserHandler{UserService: userService}
+	e.POST("/register", userHandler.Register)
+	e.POST("/login", userHandler.Login)
 
-    itemGroup := e.Group("/items")
-    itemGroup.Use(echojwt.WithConfig(echojwt.Config{
-        SigningKey: []byte("aji"),
-    }))
-    itemHandler := handler.NewItemHandler(itemService)
-    itemGroup.GET("", itemHandler.GetAllItems)
-    itemGroup.POST("", itemHandler.CreateItem)
+	// Grouped loan routes with JWT middleware
+	loanGroup := e.Group("/loans")
+	loanGroup.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(jwtKey),
+	}))
+	loanHandler := handler.NewLoanHandler(loanService)
+	loanGroup.GET("", loanHandler.GetAllLoans)
+	loanGroup.GET("/:id", loanHandler.GetLoanByID)
+	loanGroup.POST("", loanHandler.CreateLoan)
+	loanGroup.PUT("/:id", loanHandler.UpdateLoan)
+	loanGroup.DELETE("/:id", loanHandler.DeleteLoan)
+
+	// Grouped item routes with JWT middleware
+	itemGroup := e.Group("/items")
+	itemGroup.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(jwtKey),
+	}))
+	itemHandler := handler.NewItemHandler(itemService)
+	itemGroup.GET("", itemHandler.GetAllItems)
+	itemGroup.POST("", itemHandler.CreateItem)
 }
