@@ -109,16 +109,15 @@ func TestLoanService_CreateLoan(t *testing.T) {
 		Item:       entity.Item{ID: 1, Name: "tongkat daki"},
 	}
 
-	mockRepo.On("CreateLoan", mockLoan).Return(mockLoan, nil)
+	mockRepo.On("CreateLoan", mockLoan).Return(nil)
 
 	loanService := loanService.NewLoanService(mockRepo)
 	createdLoan, err := loanService.CreateLoan(mockLoan)
 
-	assert.NoError(t, err)
-	assert.Equal(t, mockLoan, createdLoan)
-	mockRepo.AssertExpectations(t)
+	assert.NoError(t, err)           
+	assert.Equal(t, mockLoan, createdLoan) 
+	mockRepo.AssertExpectations(t)    
 }
-
 
 func TestLoanService_UpdateLoan(t *testing.T) {
 	mockRepo := new(MockLoanRepository)
@@ -133,16 +132,17 @@ func TestLoanService_UpdateLoan(t *testing.T) {
 		Item:       entity.Item{ID: 1, Name: "tongkat daki"},
 	}
 
-	mockRepo.On("UpdateLoan", mockLoan).Return(mockLoan, nil)
+	mockRepo.On("GetLoanByID", mockLoan.ID).Return(*mockLoan, nil)
+
+	mockRepo.On("UpdateLoan", mockLoan).Return(nil)
 
 	loanService := loanService.NewLoanService(mockRepo)
-	updatedLoan, err := loanService.UpdateLoan(mockLoan.ID, mockLoan) 
+	updatedLoan, err := loanService.UpdateLoan(mockLoan.ID, mockLoan)
 
-	assert.NoError(t, err)
+	assert.NoError(t, err)            
 	assert.Equal(t, mockLoan, updatedLoan) 
-	mockRepo.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)    
 }
-
 
 func TestLoanService_DeleteLoan(t *testing.T) {
 	mockRepo := new(MockLoanRepository)
